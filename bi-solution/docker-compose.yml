@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mysql:
@@ -27,6 +27,9 @@ services:
       - "8088:8088"
     environment:
       - SUPERSET_SECRET_KEY=8J2x9k5PqL3mW7rT2vN8yB4zA6cF9gH3jK5mL7nP9qR2sT4uV6wX8yZ0aB2
+      - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
     depends_on:
       - trino
 volumes:
