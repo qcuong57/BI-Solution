@@ -1,38 +1,36 @@
-// Cube configuration options: https://cube.dev/docs/config
-/** @type{ import('@cubejs-backend/server-core').CreateOptions } */
+// cube.js
 module.exports = {
   driverFactory: ({ dataSource }) => {
-    // If it's not the default dataSource, fall back to built-in resolution
-    if (dataSource && dataSource !== "default") {
-      return null;
+    const ds = dataSource || "default";
+
+    if (ds === "default" || ds === "trino_mysql") {
+      return {
+        type: "trino",
+        host: process.env.CUBEJS_DB_HOST,
+        port: process.env.CUBEJS_DB_PORT,
+        catalog: process.env.CUBEJS_DB_PRESTO_CATALOG || "mysql",
+        schema: process.env.CUBEJS_DB_NAME || "ecommerce_bi",
+        user: process.env.CUBEJS_DB_USER,
+        ...(process.env.CUBEJS_DB_PASS
+          ? { password: process.env.CUBEJS_DB_PASS }
+          : {}),
+        customHeaders: {
+          "X-Trino-User": process.env.CUBEJS_DB_USER,
+        },
+      };
     }
-    // Resolve catalog and schema/name with backward compatibility
-    const catalog =
-      process.env.CUBEJS_DB_CATALOG || process.env.CUBEJS_DB_PRESTO_CATALOG;
-    const schema = process.env.CUBEJS_DB_NAME || process.env.CUBEJS_DB_SCHEMA;
 
-    if (!catalog || !schema) {
-      throw new Error(
-        `Missing required Cube.js env vars: CUBEJS_DB_CATALOG (${catalog}), CUBEJS_DB_NAME (${schema})`
-      );
-    }
+    // if (ds === "postgres") {
+    //   return {
+    //     type: "postgres",
+    //     host: process.env.PG_HOST,
+    //     port: process.env.PG_PORT || 5432,
+    //     database: process.env.PG_DB,
+    //     user: process.env.PG_USER,
+    //     password: process.env.PG_PASS,
+    //   };
+    // }
 
-    const config = {
-      type: "trino",
-      host: process.env.CUBEJS_DB_HOST,
-      port: process.env.CUBEJS_DB_PORT,
-      catalog,
-      schema,
-      user: process.env.CUBEJS_DB_USER,
-      ...(process.env.CUBEJS_DB_PASS
-        ? { password: process.env.CUBEJS_DB_PASS }
-        : {}),
-      customHeaders: {
-        "X-Trino-User": process.env.CUBEJS_DB_USER,
-      },
-    };
-
-    console.log("Final Trino config:", JSON.stringify(config, null, 2));
-    return config;
+    throw new Error(`Unknown dataSource: ${ds}`);
   },
 };
