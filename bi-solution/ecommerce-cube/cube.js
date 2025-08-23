@@ -3,6 +3,7 @@ module.exports = {
   driverFactory: ({ dataSource }) => {
     const ds = dataSource || "default";
 
+    // K
     if (ds === "default" || ds === "trino_mysql") {
       return {
         type: "trino",
@@ -20,6 +21,7 @@ module.exports = {
       };
     }
 
+    // giả lập kết nối với Postgres
     // if (ds === "postgres") {
     //   return {
     //     type: "postgres",
