@@ -1,13 +1,12 @@
 cube('Customers', {
   sql: 'SELECT * FROM ecommerce_bi.customers',
-  
+
   measures: {
     count: {
       type: 'count'
     },
     
     totalCustomers: {
-      sql: 'customer_id',
       type: 'countDistinct',
       title: 'Tổng số khách hàng'
     }
