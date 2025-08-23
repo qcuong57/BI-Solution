@@ -12,13 +12,6 @@
       "source": {
         "type": "repo",
         "dir": "trino-config"
-      },
-      "env": {
-        "MYSQL_HOST": "${{mysql.MYSQLHOST}}",
-        "MYSQL_PORT": "${{mysql.MYSQLPORT}}",
-        "MYSQL_USER": "${{mysql.MYSQLUSER}}",
-        "MYSQL_PASSWORD": "${{mysql.MYSQLPASSWORD}}",
-        "MYSQL_DATABASE": "${{mysql.MYSQLDATABASE}}"
       }
     },
     {
@@ -26,17 +19,6 @@
       "source": {
         "type": "repo",
         "dir": "ecommerce-cube"
-      },
-      "env": {
-        "CUBEJS_DB_TYPE": "trino",
-        "CUBEJS_DB_HOST": "${{trino.PUBLIC_URL}}",
-        "CUBEJS_DB_PORT": "8080",
-        "CUBEJS_DB_PRESTO_CATALOG": "mysql",
-        "CUBEJS_DB_NAME": "${{mysql.MYSQLDATABASE}}",
-        "CUBEJS_DB_USER": "${{mysql.MYSQLUSER}}",
-        "CUBEJS_DB_PASS": "${{mysql.MYSQLPASSWORD}}",
-        "CUBEJS_API_SECRET": "supersecret",
-        "PORT": "5000"
       }
     },
     {
@@ -44,10 +26,6 @@
       "source": {
         "type": "repo",
         "dir": "superset"
-      },
-      "env": {
-        "SUPERSET_SECRET_KEY": "supersecret",
-        "MAPBOX_API_KEY": ""
       }
     }
   ]
