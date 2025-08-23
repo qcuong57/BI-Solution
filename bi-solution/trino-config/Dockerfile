@@ -1,3 +1,6 @@
 FROM trinodb/trino:latest
-COPY ./config /etc/trino
+
+# Copy config (node.properties, jvm.config, config.properties, catalog/mysql.properties)
+COPY . /etc/trino
+
 EXPOSE 8080
