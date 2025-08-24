@@ -3,48 +3,34 @@ version: "3.8"
 services:
   mysql:
     image: mysql:8.0
-    container_name: mysql
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: demo
+      MYSQL_DATABASE: ecommerce_bi
     ports:
       - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   trino:
-    build: ./bi-solution/trino-config
-    container_name: trino
-    restart: always
+    image: trinodb/trino:latest
     ports:
       - "8080:8080"
+    volumes:
+      - ./trino-config:/etc/trino
     depends_on:
       - mysql
-
-  cube:
-    build: ./bi-solution/ecommerce-cube
-    container_name: cube
-    restart: always
-    environment:
-      - CUBEJS_DB_HOST=mysql
-      - CUBEJS_DB_NAME=demo
-      - CUBEJS_DB_USER=root
-      - CUBEJS_DB_PASS=root
-      - CUBEJS_DB_TYPE=mysql
-      - CUBEJS_API_SECRET=secret
-    ports:
-      - "4000:4000"
-    depends_on:
-      - mysql
-      - trino
 
   superset:
-    build: ./bi-solution/superset
-    container_name: superset
-    restart: always
-    environment:
-      SUPERSET_SECRET_KEY: "mysecretkey"
+    image: apache/superset:latest
     ports:
       - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=8J2x9k5PqL3mW7rT2vN8yB4zA6cF9gH3jK5mL7nP9qR2sT4uV6wX8yZ0aB2
+      - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
     depends_on:
       - trino
-      - mysql
+volumes:
+  mysql_data:
