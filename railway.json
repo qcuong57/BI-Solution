@@ -1,11 +1,8 @@
 {
+  "build": {
+    "builder": "docker"
+  },
   "deploy": {
-    "splitClusters": true,
-    "nodes": [
-      { "service": "mysql", "plugin": "mysql" },
-      { "service": "trino", "env": {}, "source": "/bi-solution/trino-config" },
-      { "service": "cube", "env": {}, "source": "/bi-solution/ecommerce-cube" },
-      { "service": "superset", "env": {}, "source": "/bi-solution/superset" }
-    ]
+    "startCommand": "docker-compose up"
   }
 }
