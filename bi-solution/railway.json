@@ -1,32 +1,29 @@
 {
-  "services": [
-    {
-      "name": "mysql",
-      "source": {
-        "type": "plugin",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "splitClusters": true,
+    "nodes": [
+      {
+        "service": "mysql",
         "plugin": "mysql"
+      },
+      {
+        "service": "trino",
+        "env": {},
+        "source": "/bi-solution/trino-config"
+      },
+      {
+        "service": "cube",
+        "env": {},
+        "source": "/bi-solution/ecommerce-cube"
+      },
+      {
+        "service": "superset",
+        "env": {},
+        "source": "/bi-solution/superset"
       }
-    },
-    {
-      "name": "trino",
-      "source": {
-        "type": "repo",
-        "dir": "trino-config"
-      }
-    },
-    {
-      "name": "cube",
-      "source": {
-        "type": "repo",
-        "dir": "ecommerce-cube"
-      }
-    },
-    {
-      "name": "superset",
-      "source": {
-        "type": "repo",
-        "dir": "superset"
-      }
-    }
-  ]
+    ]
+  }
 }
