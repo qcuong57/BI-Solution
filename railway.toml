@@ -1,0 +1,22 @@
+[build]
+builder = "docker"
+
+[deploy]
+startCommand = "docker-compose up"
+restartPolicyType = "always"
+
+[[services]]
+name = "mysql"
+source = "docker-compose.yml"
+
+[[services]]
+name = "trino"
+source = "docker-compose.yml"
+
+[[services]]
+name = "cube"
+source = "docker-compose.yml"
+
+[[services]]
+name = "superset"
+source = "docker-compose.yml"

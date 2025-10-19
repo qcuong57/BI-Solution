@@ -1,0 +1,26 @@
+# Core Superset
+apache-superset==3.7.0
+
+# Celery (Alerts & Reports)
+celery==5.3.1
+redis==5.2.0
+
+# Flask & FAB dependencies
+flask-appbuilder==4.3.10
+flask-limiter==2.6.3
+flask-migrate==4.0.4
+flask-talisman==1.1.0
+flask-compress==1.13
+
+# Caching & utilities
+flask-caching==2.0.0
+sqlalchemy-utils==0.41.0
+pyjwt==2.8.0
+parsedatetime==2.6
+simplejson==3.19.1
+bleach==6.0.0
+markdown==3.4.3
+
+# Data & Pandas for reports
+pandas==2.1.0
+python-dateutil==2.8.2

@@ -285,3 +285,4 @@ coverage/
 # Generated documentation
 docs/build/
 site/
+serviceAccountKey.json

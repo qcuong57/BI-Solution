@@ -4,8 +4,11 @@ CREATE DATABASE IF NOT EXISTS ecommerce_bi;
 USE ecommerce_bi;
 
 DROP TABLE IF EXISTS order_items;
+
 DROP TABLE IF EXISTS orders;
+
 DROP TABLE IF EXISTS products;
+
 DROP TABLE IF EXISTS customers;
 
 -- Create Customers table
@@ -284,6 +287,22 @@ CREATE TABLE poi_locations (
     longitude DECIMAL(9, 6)
 );
 
+CREATE TABLE country_region_map (
+    country VARCHAR(50),
+    region_name VARCHAR(50)
+);
+
+INSERT INTO
+    country_region_map
+VALUES ('USA', 'North America'),
+    ('Canada', 'North America'),
+    ('UK', 'Europe'),
+    ('Germany', 'Europe'),
+    (
+        'Australia',
+        'Australia Region'
+    );
+
 INSERT INTO
     poi_locations
 VALUES (
@@ -414,3 +433,107 @@ GROUP BY
     p.latitude,
     p.longitude
 ORDER BY total_sales DESC;
+
+-- Thêm cột GeoJSON vào sales_regions
+ALTER TABLE sales_regions ADD COLUMN region_geojson JSON;
+
+UPDATE sales_regions
+SET
+    region_geojson = '{
+  "type": "Polygon",
+  "coordinates": [[
+    [-130, 55], [-60, 55], [-60, 20], [-130, 20], [-130, 55]
+  ]]
+}'
+WHERE
+    region_name = 'North America';
+
+UPDATE sales_regions
+SET
+    region_geojson = '{
+  "type": "Polygon",
+  "coordinates": [[
+    [-10, 70], [40, 70], [40, 35], [-10, 35], [-10, 70]
+  ]]
+}'
+WHERE
+    region_name = 'Europe';
+
+UPDATE sales_regions
+SET
+    region_geojson = '{
+  "type": "Polygon",
+  "coordinates": [[
+    [110, -10], [155, -10], [155, -45], [110, -45], [110, -10]
+  ]]
+}'
+WHERE
+    region_name = 'Australia Region';
+
+w   INSERT INTO
+    sales_regions (
+        region_id,
+        region_name,
+        center_latitude,
+        center_longitude,
+        region_geojson
+    )
+VALUES (
+        4,
+        'Asia',
+        30.0,
+        100.0,
+        '{
+    "type": "Polygon",
+    "coordinates": [[
+      [60, 55], [150, 55], [150, 5], [60, 5], [60, 55]
+    ]]
+  }'
+    );
+
+-- Thêm South America Region
+INSERT INTO
+    sales_regions (
+        region_id,
+        region_name,
+        center_latitude,
+        center_longitude,
+        region_geojson
+    )
+VALUES (
+        5,
+        'South America',
+        -15.0,
+        -60.0,
+        '{
+    "type": "Polygon",
+    "coordinates": [[
+      [-85, 15], [-35, 15], [-35, -55], [-85, -55], [-85, 15]
+    ]]
+  }'
+    );
+
+CREATE OR REPLACE VIEW sales_region_sales AS
+SELECT
+    r.region_id,
+    r.region_name,
+    r.center_latitude,
+    r.center_longitude,
+    r.region_geojson,
+    COALESCE(SUM(o.total_amount), 0) AS total_sales,
+    COALESCE(COUNT(DISTINCT o.order_id), 0) AS total_orders,
+    COALESCE(
+        COUNT(DISTINCT c.customer_id),
+        0
+    ) AS total_customers
+FROM
+    sales_regions r
+    JOIN country_region_map m ON r.region_name = m.region_name
+    LEFT JOIN customers c ON c.country = m.country
+    LEFT JOIN orders o ON c.customer_id = o.customer_id
+GROUP BY
+    r.region_id,
+    r.region_name,
+    r.center_latitude,
+    r.center_longitude,
+    r.region_geojson;
