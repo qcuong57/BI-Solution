@@ -12,6 +12,31 @@ services:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  postgres:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: analytics
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  mongo:
+    image: mongo:6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: salesdb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init.js:ro
+
   trino:
     image: trinodb/trino:latest
     ports:
@@ -20,6 +45,45 @@ services:
       - ./trino-config:/etc/trino
     depends_on:
       - mysql
+      - postgres
+      - mongo
+    environment:
+      - DISABLE_SECURITY=true
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  # Service init để migrate database trước
+  superset-init:
+    image: apache/superset:latest
+    container_name: superset_init
+    command: >
+      bash -c "
+      echo '=== Superset Database Initialization ===' &&
+      superset db upgrade &&
+      echo 'Database migrated successfully!' &&
+      superset fab create-admin \
+        --username admin \
+        --firstname Admin \
+        --lastname User \
+        --email admin@superset.com \
+        --password admin || echo 'Admin already exists' &&
+      superset init &&
+      echo '=== Initialization Complete ==='
+      "
+    environment:
+      - SUPERSET_SECRET_KEY=8J2x9k5PqL3mW7rT2vN8yB4zA6cF9gH3jK5mL7nP9qR2sT4uV6wX8yZ0aB2
+      - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
+      - SUPERSET_DATABASE_URI=postgresql+psycopg2://postgres:root@postgres:5432/analytics
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
+    depends_on:
+      - redis
+    restart: "no"
 
   superset:
     image: apache/superset:latest
@@ -28,9 +92,51 @@ services:
     environment:
       - SUPERSET_SECRET_KEY=8J2x9k5PqL3mW7rT2vN8yB4zA6cF9gH3jK5mL7nP9qR2sT4uV6wX8yZ0aB2
       - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
+      - SUPERSET_DATABASE_URI=postgresql+psycopg2://postgres:root@postgres:5432/analytics
     volumes:
       - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
     depends_on:
       - trino
+      - redis
+      - superset-init
+      
+  worker:
+    image: apache/superset:latest
+    container_name: superset_worker
+    command: celery --app=superset.tasks.celery_app:app worker --pool=prefork -O fair -c 4 -l INFO
+    environment:
+      - SUPERSET_SECRET_KEY=8J2x9k5PqL3mW7rT2vN8yB4zA6cF9gH3jK5mL7nP9qR2sT4uV6wX8yZ0aB2
+      - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
+      - SUPERSET_DATABASE_URI=postgresql+psycopg2://postgres:root@postgres:5432/analytics   # ⚡ thêm dòng này
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
+    depends_on:
+      - redis
+      - postgres
+
+  beat:
+    image: apache/superset:latest
+    container_name: superset_beat
+    command: celery --app=superset.tasks.celery_app:app beat --pidfile /tmp/celerybeat.pid -l INFO -s /app/superset_home/celerybeat-schedule
+    environment:
+      - SUPERSET_SECRET_KEY=8J2x9k5PqL3mW7rT2vN8yB4zA6cF9gH3jK5mL7nP9qR2sT4uV6wX8yZ0aB2
+      - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
+      - SUPERSET_DATABASE_URI=postgresql+psycopg2://postgres:root@postgres:5432/analytics
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+      - superset_home:/app/superset_home
+    depends_on:
+      - redis
+      - superset
+      - worker
+      - superset-init
+      - postgres
+    restart: unless-stopped
+
 volumes:
   mysql_data:
+  postgres_data:
+  mongo_data:
+  superset_home:  # Docker managed volume, không phải thư mục local

@@ -1,57 +1,58 @@
-cube('Customers', {
-  sql: 'SELECT * FROM ecommerce_bi.customers',
+cube(`Customers`, {
+  sql: `SELECT * FROM ecommerce_bi.customers`,
 
   measures: {
     count: {
-      type: 'count'
+      type: `count`
     },
-    
+
     totalCustomers: {
-      type: 'countDistinct',
-      title: 'Tổng số khách hàng'
+      sql: `customer_id`,
+      type: `countDistinct`,
+      title: `Tổng số khách hàng`
     }
   },
-  
+
   dimensions: {
     customerId: {
-      sql: 'customer_id',
-      type: 'number',
+      sql: `customer_id`,
+      type: `number`,
       primaryKey: true
     },
-    
+
     firstName: {
-      sql: 'first_name',
-      type: 'string'
+      sql: `first_name`,
+      type: `string`
     },
-    
+
     lastName: {
-      sql: 'last_name',
-      type: 'string'
+      sql: `last_name`,
+      type: `string`
     },
-    
+
     fullName: {
       sql: `CONCAT(first_name, ' ', last_name)`,
-      type: 'string'
+      type: `string`
     },
-    
+
     email: {
-      sql: 'email',
-      type: 'string'
+      sql: `email`,
+      type: `string`
     },
-    
+
     city: {
-      sql: 'city',
-      type: 'string'
+      sql: `city`,
+      type: `string`
     },
-    
+
     country: {
-      sql: 'country',
-      type: 'string'
+      sql: `country`,
+      type: `string`
     },
-    
+
     createdAt: {
-      sql: 'created_at',
-      type: 'time'
+      sql: `created_at`,
+      type: `time`
     }
   }
 });
